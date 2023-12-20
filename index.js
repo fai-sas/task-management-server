@@ -59,6 +59,31 @@ async function run() {
       })
     }
 
+    // user related api
+
+    app.get('/users', verifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/users/:id', verifyToken, async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await userCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.post('/users', async (req, res) => {
+      const user = req.body
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query)
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null })
+      }
+      const result = await userCollection.insertOne(user)
+      res.send(result)
+    })
+
     //  Send a ping to confirm a successful connection
     // await client.db('admin').command({ ping: 1 })
     console.log(
