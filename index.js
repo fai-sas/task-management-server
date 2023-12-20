@@ -31,6 +31,34 @@ async function run() {
     const userCollection = client.db('TaskManagement').collection('Users')
     const taskCollection = client.db('TaskManagement').collection('Tasks')
 
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h',
+      })
+      res.send({ token })
+    })
+
+    // middlewares
+
+    const verifyToken = (req, res, next) => {
+      if (!req.headers.authorization) {
+        console.log('No token found')
+        return res.status(401).send({ message: 'unauthorized access' })
+      }
+      const token = req.headers.authorization.split(' ')[1]
+      console.log('Token:', token)
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          console.log('Token verification failed:', err)
+          return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.decoded = decoded
+        next()
+      })
+    }
+
     //  Send a ping to confirm a successful connection
     // await client.db('admin').command({ ping: 1 })
     console.log(
